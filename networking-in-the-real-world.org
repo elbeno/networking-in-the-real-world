@@ -1,0 +1,106 @@
+#+TITLE:     Networking in the Real World
+#+AUTHOR:    Ben Deane
+#+EMAIL:     bdeane@blizzard.com
+#+DATE:      24th February 2014
+#+DESCRIPTION:
+#+KEYWORDS: networking real world
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+#+XSLT:
+#+LaTeX_CLASS: Madridbeamer
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+#+LaTeX_HEADER: \usepackage{helvet}
+#+STARTUP: beamer
+
+# To generate notes pages only:
+# +LaTeX_CLASS_OPTIONS: [handout]
+# +LaTeX_HEADER: \setbeameroption{show only notes}
+# +LaTeX_HEADER: \usepackage{pgfpages}
+# +LaTeX_HEADER: \pgfpagesuselayout{2 on 1}[letterpaper,portrait,border shrink=5mm]
+
+# For normal presentation output:
+#+LaTeX_CLASS_OPTIONS: [bigger]
+
+
+* Basics
+TCP vs UDP?
+latency issues?
+asynchronous design
+fault-tolerant design
+converge to the correct state
+QoS issues
+automatic behaviours vs player-requested behaviours
+prediction issues
+anti-cheat designs
+time synchronization
+
+* Networking at scale
+scaling servers
+logging
+stats
+
+* Weird networks
+don't allow bittorrent
+NATs
+CDNs
+proxies
+
+* Weird clients
+file permissions
+OS edge cases (sleep mode)
+floating point mismatches
+client's aren't easy to ID
+
+* Dependencies
+you don't want to write protocol libraries (bittorrent, protobuf)
+these will have bugs in
+
+* Error handling
+everything will go wrong
+don't use asserts
+computers are stupid
+players: intelligent but non-technical?
+analytics data & crash reports
+math vs biology
+recover gracefully (don't do the well of despair thing)
+consider failure modes
+disambiguate at low level, C&C at high level
+retries rarely work
+
+* Backwards compatibility
+protocols
+APIs
+
+* Operations
+people who run servers != people who write servers
+don't make things brittle and ordering-sensitive
+problems are often novel
+humans need to be able to inspect and fix
+hardware failures happen
+release cadences
+holidays, other titles and other release window problems
+
+* Security
+if you're successful you're a target
+clients should know as little as possible
+servers should verify everything
+at a certain scale, DDoS protection becomes business as usual
+risk systems to score events
+login & connection metering
+
+* Performance
+login is the most expensive "operation"
+consider API frequency/cost
+the true thing to optimize for is power
+consider performance "unit tests" to deal with scale
+batching
+caching (careful - it's hard)
+
+* Other real-world issues
+virus scans & whitelisting
