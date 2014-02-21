@@ -5,18 +5,16 @@
 #+DESCRIPTION:
 #+KEYWORDS: networking real world
 #+LANGUAGE:  en
-#+OPTIONS:   H:3 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
+#+OPTIONS:   H:2 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
 #+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
-#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
-#+EXPORT_SELECT_TAGS: export
-#+EXPORT_EXCLUDE_TAGS: noexport
-#+LINK_UP:
-#+LINK_HOME:
-#+XSLT:
-#+LaTeX_CLASS: Madridbeamer
-#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
-#+LaTeX_HEADER: \usepackage{helvet}
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
+
+#+LaTeX_CLASS: beamer
 #+STARTUP: beamer
+#+BEAMER_THEME: Madrid
+#+LaTeX_HEADER: \usepackage{helvet}
+# +COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
 
 # To generate notes pages only:
 # +LaTeX_CLASS_OPTIONS: [handout]
@@ -25,10 +23,78 @@
 # +LaTeX_HEADER: \pgfpagesuselayout{2 on 1}[letterpaper,portrait,border shrink=5mm]
 
 # For normal presentation output:
-#+LaTeX_CLASS_OPTIONS: [bigger]
+#+LaTeX_CLASS_OPTIONS: [presentation, bigger]
 
+# +beamer: \beamerdefaultoverlayspecification{<+->}
+
+* Introduction
+** Who Am I?
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Ben Deane
+- Programmer at Blizzard on the Battle.net team
+- Lifelong network game programmer
+
+** Who Am I?
+:PROPERTIES:
+:BEAMER_act: [<+(-1)->]
+:END:
+*** A block                                                  :B_column:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: column
+:END:
+#+attr_latex: width=\textwidth
+[[./Populous-the-beginning.png]]
+*** A block                                                :B_column:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: column
+:END:
+#+attr_latex: width=\textwidth
+[[./starcraft-2-box.jpg]]
+
+** Who Am I?
+:PROPERTIES:
+:BEAMER_act: [<+(-1)->]
+:END:
+*** A block                                                  :B_column:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: column
+:END:
+#+attr_latex: width=\textwidth
+[[./Warhammer40kfwbox.jpg]]
+*** A block                                                :B_column:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: column
+:END:
+#+attr_latex: width=\textwidth
+[[./Grabox.jpg]]
+
+** Who Am I?
+:PROPERTIES:
+:BEAMER_act: [<+(-1)->]
+:END:
+*** A block                                                :B_column:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: column
+:END:
+#+attr_latex: width=\textwidth
+[[./SimThemeParkWorld.jpg]]
+*** B block                                                :B_column:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: column
+:END:
+#+attr_latex: width=\textwidth
+[[./Diablo_III_cover.png]]
 
 * Basics
+** TCP vs UDP
 TCP vs UDP?
 latency issues?
 asynchronous design
@@ -41,27 +107,32 @@ anti-cheat designs
 time synchronization
 
 * Networking at scale
+** Woo
 scaling servers
 logging
 stats
 
 * Weird networks
+** Woo
 don't allow bittorrent
 NATs
 CDNs
 proxies
 
 * Weird clients
+** Woo
 file permissions
 OS edge cases (sleep mode)
 floating point mismatches
 client's aren't easy to ID
 
 * Dependencies
+** Woo
 you don't want to write protocol libraries (bittorrent, protobuf)
 these will have bugs in
 
 * Error handling
+** Woo
 everything will go wrong
 don't use asserts
 computers are stupid
@@ -74,10 +145,12 @@ disambiguate at low level, C&C at high level
 retries rarely work
 
 * Backwards compatibility
+** Woo
 protocols
 APIs
 
 * Operations
+** Woo
 people who run servers != people who write servers
 don't make things brittle and ordering-sensitive
 problems are often novel
@@ -87,6 +160,7 @@ release cadences
 holidays, other titles and other release window problems
 
 * Security
+** Woo
 if you're successful you're a target
 clients should know as little as possible
 servers should verify everything
@@ -95,6 +169,7 @@ risk systems to score events
 login & connection metering
 
 * Performance
+** Woo
 login is the most expensive "operation"
 consider API frequency/cost
 the true thing to optimize for is power
@@ -103,4 +178,5 @@ batching
 caching (careful - it's hard)
 
 * Other real-world issues
+** Woo
 virus scans & whitelisting
