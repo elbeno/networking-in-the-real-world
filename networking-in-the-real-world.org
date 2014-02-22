@@ -5,7 +5,7 @@
 #+DESCRIPTION:
 #+KEYWORDS: networking real world
 #+LANGUAGE:  en
-#+OPTIONS:   H:2 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
+#+OPTIONS:   H:2 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
 #+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
 #+SELECT_TAGS: export
 #+EXCLUDE_TAGS: noexport
@@ -123,7 +123,22 @@ infrastructure issues than actual gameplay networking.
 For Theme Park World, I wrote the online park publishing & visiting code,
 basically a glorified chatroom. For D3 my team did the whole Battle.net service.
 
+
 * Basics
+
+** What's in this lecture?
+- Real world examples
+- Tons of practical advice
+- Some war stories
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+My aim for this lecture is to expand on what you've already learned in the
+academic context, show you how it's applied in the industry, make you think
+about messy real-world issues, and tell you some stories of where things have
+gone right for me, and where things have gone wrong.
 
 ** Why Network Programming?
 #+attr_latex: :align |c|r|r|r|
@@ -156,10 +171,42 @@ not even concurrent across different machines - try spending 3 weeks poring over
 hundreds of MB of logs for a problem that occurs 0.1% of the time in a
 16-machine network game, then tell me how hard your threading bug is.
 
-My aim for this lecture is to expand on what you've already learned in the
-academic context, show you how it's applied in the industry, make you think
-about messy real-world issues, and tell you some stories of where things have
-gone right for me, and where things have gone wrong.
+** Real World vs Academia
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+The Real World is what you learn but also:
+- messy
+- dealing with edge cases
+- cutting corners
+- taking advantage of hardware
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+Everything you learn in school is applicable to the real world. But...
+
+Errors happen all the time. You need to deal with them.
+
+Edge cases happen all the time. You can't hope to cover all the weird and
+wonderful setups that players have, in your dev environment.
+
+On the plus side, you can cut a lot of corners. The objective is to make a game
+fun, not to model the real world accurately or have any kind of internal
+consistency.
+
+And you have to deal with hardware.
+
+Good example (although not network-related) of where the real-world differs from
+academia is from UE3 frustum culling code. Conventional algorithms class would
+cover spatial subdivision of the world (eg quadtree) and teach how to test the
+view frustum against that to get good performance. All fine.
+
+But in the real world, your game might only have a couple of hundred entities to
+test (eg Gears of War). Your fancy algorithm isn't going to beat a simple linear
+test of all the objects, especially if you can take advantage of cache
+prefetching and/or offload it to a fast piece of hardware (PS3 SPU).
 
 ** TCP vs UDP
 - Your most basic latency-affecting decision
@@ -171,10 +218,15 @@ gone right for me, and where things have gone wrong.
 :BEAMER_col: 0.4
 :BEAMER_env: block
 :END:
+#+attr_beamer: :overlay <1->
 - Connection, stream-oriented
+#+attr_beamer: :overlay <2->
 - 20-byte header
+#+attr_beamer: :overlay <3->
 - Guaranteed in-order
+#+attr_beamer: :overlay <4->
 - Nagling
+#+attr_beamer: :overlay <5->
 - Socket per connection
 
 *** UDP                                                     :B_block:BMCOL:
@@ -182,10 +234,15 @@ gone right for me, and where things have gone wrong.
 :BEAMER_col: 0.4
 :BEAMER_env: block
 :END:
+#+attr_beamer: :overlay <1->
 - Connectionless, packet-oriented
+#+attr_beamer: :overlay <2->
 - 8 byte header
+#+attr_beamer: :overlay <3->
 - Best-effort
+#+attr_beamer: :overlay <4->
 - Immediate send
+#+attr_beamer: :overlay <5->
 - Single multiplexed socket
 
 ** TCP or UDP?
@@ -235,11 +292,6 @@ However, our experience of Chinese networks has shown that it is not uncommon to
 have sustained high packet loss (~20%). Even with relatively high speed, high
 bandwidth connections.
 
-Roll-your-own guaranteed on UDP can work at the object level, ACK packets you've
-received, implicitly NAK ones you've skipped, re-dirty the data. You can also
-mix in verbatim packet resend for events that warrant it (eg not movement data,
-but object transitions).
-
 latency issues?
 asynchronous design
 fault-tolerant design
@@ -258,61 +310,320 @@ time synchronization
 - Part of connection establishment
 - Sync to epoch (eg. start of level)
 
-** Network topologies
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+Games usually do pretty much what you'd expect.
 
-Client-server vs Peer-to-peer
-Peer-to-peer has half the latency.
-Peer-to-peer is more complex code.
-Peer-to-peer is more brittle because more connections = more opportunity for drops.
-8-player game: 7 connections CS, 28 P2P.
-Peer-to-peer makes some things easier (eg. logic for host migration).
+Send a packet, record RTT, subtract time at the remote end, divide by two. This
+gives you a rough estimate of your one-way trip time.
+
+Do that a few times to try to get a reasonable average, discard outliers, etc.
+Very simple statistical smoothing. Iterate your guesses until you're good
+enough.
+
+Sometimes it's enough to sync once, other times it's at the beginning of a
+level. Generally it depends on the game and when the connection is made.
+
+** Network topologies
+*** Peer-hosted                                               :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+attr_beamer: :overlay <1->
+- single authority
+#+attr_beamer: :overlay <2->
+- 2x RTT
+#+attr_beamer: :overlay <3->
+- n-1 connections
+#+attr_beamer: :overlay <4->
+- failures affect one player
+#+attr_beamer: :overlay <5->
+- "free" consensus
+#+attr_beamer: :overlay <6->
+- one player needs upload BW
+
+*** "True" peer-to-peer                                       :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+attr_beamer: :overlay <1->
+- distributed authority
+#+attr_beamer: :overlay <2->
+- 1x RTT
+#+attr_beamer: :overlay <3->
+- n(n-1)/2 connections
+#+attr_beamer: :overlay <4->
+- failures affect everyone?
+#+attr_beamer: :overlay <5->
+- "free" host migration
+#+attr_beamer: :overlay <6->
+- everyone needs upload BW
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+Peer-to-peer is more complex code? Client-server gives a nice model of
+authority. (The server can cheat vs anyone can cheat). Or in a more relaxed view
+of things, the server has an advantage.
+
+Peer-to-peer gives you half the latency because there is no round trip; each
+packet only travels across one link.
+
+Peer-to-peer is more brittle. If your game can't tolerate connection drops very
+well, you'd be advised to minimise the number of connections made.
+
 Peer-to-peer is harder to establish the mesh especially in the presence of NAT.
 
-** Lobby setup vs drop-in any time?
+(Firewarrior story)
 
-What type of game is it? eg. Round-based FPS vs RTS.
-Lobby discovery.
+Peer-to-peer makes some things easier (eg. logic for host migration). But other
+things are harder: determining consensus among the players.
+
+True peer-to-peer requires that everyone have enough upload bandwidth to send to
+every other player. This might be an issue, especially since most ISPs offer
+asymmetric plans.
+
+Peer-to-peer doesn't scale.
+
 
 * FPS issues
 
+** Basic FPS Network Model
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Client-server/peer-hosted
+- Time-synched to within a few ms
+- Object state is transferred
+- Clients converge to the true state
+- 90% of data is for movement
+- Semi-guaranteed protocol over UDP
+
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Object state is transferred vs inputs being transferred. This is not a parallel
+simulation. There are typically only a few dozen networked objects alive at any
+one time.
+
+The game state does not really exist in its true form on any one machine,
+rather, all machine are continuously converging to the correct state.
+
+** Typical FPS Choices
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Two bullet types
+- High fidelity human animation (=> head shots)
+- Relatively few active objects at a time
+- High render rate, low logic rate
+- Available headless server
+- Simple/Nonexistant AI
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Lightspeed bullets vs projectiles. Lightspeed bullets are interesting for
+prediction models.
+
+On a headless server, animation can be optimized. It is possible for the server
+to slide the characters around and do only broadphase collision on their
+bounding boxes. At the point where a bullet collision occurs with a character,
+only then does the server need to compute the character pose to do the
+narrowphase collision (to determine whether it was a head shot).
+
+FPSes typically run at high frame rate but they do relatively little logic. The
+logic (eg pathfinding) can run at a low Hz. With a decent network engine, the
+frequency of packet send can be dialled down also (eg 10Hz or even lower).
+
+** Example Semi-Guaranteed Protocol
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Entity-component model
+  - Movement/Position/Rotation
+  - Animation state
+  - Health/Armour
+- Components are marked dirty as their state is updated
+- Components map to network "channels"
+- Network channels are given priorities
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+When a component is dirtied, it gets assigned a send priority based on its
+network channel priority.
+
+** Constructing Packets
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Keep dirty components in a priority queue
+- Periodically fill a packet by priority
+- Max packet size = 576 bytes
+- Anything left out gets increased priority
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Dirty components are kept in a priority queue to send.
+576 bytes is the minimum IPv4 datagram size that all hosts must accept.
+
+Amount of priority increase and priority of the channel are policy values that
+make sense for the game. eg. Health is high priority.
+
+** ACKing and NAKing
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Each packet contains a sequence number
+- When components are serialised they remember the sequence number
+- Each packet header includes ACKs for previous packets received
+- Any gaps in the ACK stream are implicitly NAKed
+- Components from NAKed packets have their data re-dirtied
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Most components are continually being re-dirtied anyway.
+
+** Object Creation/Destruction
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Object creation/destruction events
+- Some objects can do simultaneous simulation
+- Others must be kept up-to-date
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+It's usually important to impose an ordering on object creation and
+destruction - objects can't be destroyed before they get created. Short-lived
+objects can be problematic. So this is an area where dirty objects can't fully
+die but must become ghosts until their dead state has been fully ACKed.
+
+Some objects just need a creation packet and then can be simulated independently
+on every machine. eg. short-lived ballistic projectiles (grenades) or stationary
+things (timed mines). Yes, it's possible that something could get in their path
+and result in two machines having divergent simulations, but if the projectile
+is going to explode soon anyway, odds are nobody will really notice. You do what
+you can get away with.
+
+** Compressing data
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Conserving bandwidth is important
+- Bitpacking protocols are common
+- Range data types
+- Floating point types can be truncated
+- Or quantize position in level
+- 4x4 matrices are wasteful
+- Rotations can be heavily quantized
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+It is usually important to conserve bandwidth as much as possible. This was true
+15 years ago and it's true now. If bandwidth creeps up to near link capacity, it
+starts to make latency worse real fast. Many people these days use their network
+connections for other purposes during gameplay - sometimes on different
+machines. eg. VoIP clients, or someone else in the household watching Netflix.
+
+Generalized compression is sometimes used, although less often than you'd think.
+
+Range-bounded integers can use no more bits than you need.
+
+Position can be converted to fixed-size grid coordinate within a level. (Take
+care over the origin offset though - it's common for levels to be built nowhere
+near (0,0).
+
+Height position in particular is often susceptible to quantization. We mostly
+live on a 2D plane, and engines can automatically move players to a sensible
+ground height.
+
+Matrices can become quaternions. (16 numbers -> 4 numbers).
+
+It is hard to notice artifacts in rotation even using just a byte.
+
+** Going to the Dark Side
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- How much authority do you let a client have?
+- Responsiveness vs cheating
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+
+
+** Interpolation/Prediction
+
+
+Networking and physics
+Networking and animation
+Only pose characters to determine true hit after broadphase collision
 
 * RTS issues
 ** Input passing
 ** E-sports and Fairness
 
-* MMO issues
+* Notes                                                              :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+- MMO issues
 
 
-* Cheating
+- Cheating
 
 
-* Networking at scale
-** Woo
+- Networking at scale
 scaling servers
 logging
 stats
 
-* Weird networks
-** Woo
+- Weird networks
 don't allow bittorrent
 NATs
 CDNs
 proxies
 
-* Weird clients
-** Woo
+- Weird clients
 file permissions
 OS edge cases (sleep mode)
 floating point mismatches
 client's aren't easy to ID
 
-* Dependencies
-** Woo
+- Dependencies
 you don't want to write protocol libraries (bittorrent, protobuf)
 these will have bugs in
 
-* Error handling
-** Woo
+- Error handling
 everything will go wrong
 don't use asserts
 computers are stupid
@@ -324,13 +635,11 @@ consider failure modes
 disambiguate at low level, C&C at high level
 retries rarely work
 
-* Backwards compatibility
-** Woo
+- Backwards compatibility
 protocols
 APIs
 
-* Operations
-** Woo
+- Operations
 people who run servers != people who write servers
 don't make things brittle and ordering-sensitive
 problems are often novel
@@ -339,8 +648,7 @@ hardware failures happen
 release cadences
 holidays, other titles and other release window problems
 
-* Security
-** Woo
+- Security
 if you're successful you're a target
 clients should know as little as possible
 servers should verify everything
@@ -348,8 +656,7 @@ at a certain scale, DDoS protection becomes business as usual
 risk systems to score events
 login & connection metering
 
-* Performance
-** Woo
+- Performance
 login is the most expensive "operation"
 consider API frequency/cost
 the true thing to optimize for is power
@@ -357,6 +664,5 @@ consider performance "unit tests" to deal with scale
 batching
 caching (careful - it's hard)
 
-* Other real-world issues
-** Woo
+- Other real-world issues
 virus scans & whitelisting
