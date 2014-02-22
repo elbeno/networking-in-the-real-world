@@ -25,8 +25,6 @@
 # For normal presentation output:
 #+LaTeX_CLASS_OPTIONS: [presentation, bigger]
 
-# +beamer: \beamerdefaultoverlayspecification{<+->}
-
 * Introduction
 ** Who Am I?
 :PROPERTIES:
@@ -55,6 +53,13 @@
 #+attr_latex: width=\textwidth
 [[./starcraft-2-box.jpg]]
 
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+I've done RTS games. Populous 3 was first game I did that was properly
+architected for Internet play.
+
 ** Who Am I?
 :PROPERTIES:
 :BEAMER_act: [<+(-1)->]
@@ -73,6 +78,15 @@
 :END:
 #+attr_latex: width=\textwidth
 [[./Grabox.jpg]]
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+I've done FPS games. Firewarrior was Europe's first PS2 Internet-playable game.
+It used a peer-to-peer network topology. Goldeneye: RA was a poorly received
+game, but the network game had some fun features and some interesting
+development stories I can tell you about.
 
 ** Who Am I?
 :PROPERTIES:
@@ -93,9 +107,96 @@
 #+attr_latex: width=\textwidth
 [[./Diablo_III_cover.png]]
 
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+I've done other types of games, and games where I worked on more network
+infrastructure issues than actual gameplay networking.
+
+For Theme Park World, I wrote the online park publishing & visiting code,
+basically a glorified chatroom. For D3 my team did the whole Battle.net service.
+
 * Basics
 ** TCP vs UDP
-TCP vs UDP?
+- Your most basic latency-affecting decision
+- Game design and genre influences this
+
+** TCP vs UDP
+*** TCP                                                     :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+- Connection, stream-oriented
+- 20-byte header
+- Guaranteed in-order
+- Nagling
+- Socket per connection
+
+*** UDP                                                     :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+- Connectionless, packet-oriented
+- 8 byte header
+- Best-effort
+- Immediate send
+- Single multiplexed socket
+
+** TCP or UDP?
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+1. Your data is usually ephemeral
+1. It doesn't matter if one or two packets get dropped
+1. UDP can do NAT traversal
+1. UDP packet overhead is lower
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+You all know the difference between UDP and TCP
+
+It's "received wisdom" in action games to use one's own partially-guaranteed
+protocol over UDP, a few of reasons for this:
+
+1. Your data is usually ephemeral and what's valid to send this frame will be
+   invalidated next frame: you don't want to block waiting to send data.
+
+2. For the same reason, it doesn't matter if one or two packets get dropped as
+   long as the game state converges.
+
+3. UDP has a big advantage in network topology which is that it is possible to
+   do NAT traversal using STUN or some variant thereof.
+
+4. UDP packet overhead is lower.
+
+However, look again at point 1 and consider real life network behaviours. How
+common is sustained or sporadic loss?
+
+I remember a gd_algorithms group thread from some years ago in which it was
+argued that packet loss is not normally nicely sustained at a low rate, but is
+bursty. That is to say that a network dropout of a second or two would probably
+stall your game just as badly on UDP as on TCP.
+
+(However, UDP recovery is better because you don't waste time resending the
+packets that are out of date.)
+
+This was/is probably true in the US and other countries with mature internet
+infrastructure.
+
+However, our experience of Chinese networks has shown that it is not uncommon to
+have sustained high packet loss (~20%). Even with relatively high speed, high
+bandwidth connections.
+
+Roll-your-own guaranteed on UDP can work at the object level, ACK packets you've
+received, implicitly NAK ones you've skipped, re-dirty the data. You can also
+mix in verbatim packet resend for events that warrant it (eg not movement data,
+but object transitions).
+
 latency issues?
 asynchronous design
 fault-tolerant design
@@ -105,6 +206,42 @@ automatic behaviours vs player-requested behaviours
 prediction issues
 anti-cheat designs
 time synchronization
+
+** Synchronizing Time
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Games typically use an NTP-like algorithm
+- Part of connection establishment
+- Sync to epoch (eg. start of level)
+
+** Network topologies
+
+Client-server vs Peer-to-peer
+Peer-to-peer has half the latency.
+Peer-to-peer is more complex code.
+Peer-to-peer is more brittle because more connections = more opportunity for drops.
+8-player game: 7 connections CS, 28 P2P.
+Peer-to-peer makes some things easier (eg. logic for host migration).
+Peer-to-peer is harder to establish the mesh especially in the presence of NAT.
+
+** Lobby setup vs drop-in any time?
+
+What type of game is it? eg. Round-based FPS vs RTS.
+Lobby discovery.
+
+* FPS issues
+
+
+* RTS issues
+** Input passing
+** E-sports and Fairness
+
+* MMO issues
+
+
+* Cheating
+
 
 * Networking at scale
 ** Woo
