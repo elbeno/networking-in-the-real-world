@@ -32,7 +32,13 @@
 :END:
 - Ben Deane
 - Programmer at Blizzard on the Battle.net team
-- Lifelong network game programmer
+- Lifelong\mbox{*} network game programmer
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+At least for my working life...
 
 ** Who Am I?
 :PROPERTIES:
@@ -118,6 +124,43 @@ For Theme Park World, I wrote the online park publishing & visiting code,
 basically a glorified chatroom. For D3 my team did the whole Battle.net service.
 
 * Basics
+
+** Why Network Programming?
+#+attr_latex: :align |c|r|r|r|
+|------+-----------+-------------+--------------------|
+| Year | CPU (MHz) | Memory (MB) | London-LA RTT (ms) |
+|------+-----------+-------------+--------------------|
+| 1995 |        90 |           8 |                200 |
+| 2000 |       400 |          32 |                200 |
+| 2005 |      1400 |         256 |                200 |
+| 2010 |      2660 |        4096 |                200 |
+| 2014 |      3330 |       16384 |                200 |
+|------+-----------+-------------+--------------------|
+
+- Networking programming stays interesting and challenging
+- Hiding latency is the constant problem to solve
+- Non-network programmers just discovered concurrency?
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+Network programming doesn't really get easier as machines get faster, unlike
+most other programming disciplines.
+
+Network programming is messy in ways that other programming disciplines aren't.
+Errors are normal.
+
+You think you have threading issues? That's nice. Welcome to my world. You're
+not even concurrent across different machines - try spending 3 weeks poring over
+hundreds of MB of logs for a problem that occurs 0.1% of the time in a
+16-machine network game, then tell me how hard your threading bug is.
+
+My aim for this lecture is to expand on what you've already learned in the
+academic context, show you how it's applied in the industry, make you think
+about messy real-world issues, and tell you some stories of where things have
+gone right for me, and where things have gone wrong.
+
 ** TCP vs UDP
 - Your most basic latency-affecting decision
 - Game design and genre influences this
