@@ -1026,6 +1026,122 @@ changes to
 \texttt{\textcolor{defaultmintedgreen}{while}}
 \end{center}
 
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+This bug was amazing. It was quite subtle and hard to spot because it took a
+while to show up in games. Games had to last a while before the bug gradually
+took hold. But the effect was that slowly, clients would get further and further
+behind the server.
+
+If a client had a spike such that a frame took a little longer to process or
+render, an extra gameturn could arrive from the server in that time. Now the
+client had two gameturns in its network queue. But it only ever processed one
+per render. So it would never catch up, and every time it took that little bit
+longer to process a frame, it would get that little bit more behind.
+
+One side effect of this was that I knew that the network code was pretty robust.
+In one case we saw a client get behind by a full minute! The other player had
+already finished the game, and the player behind was still playing! I knew then
+that the code was robust!
+
+Coincidentally I had this bug twice in my career: 8 years after Populous: The
+Beginning, I was working on Goldeneye: RA and I had a variant of this same bug.
+In that case it was easier to recognize because the more clients that joined a
+game, the more the clients would get behind.
+
+** Bug Story II
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+\begin{center}
+Goldeneye: Rogue Agent
+\end{center}
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Goldeneye was a round-based FPS with up to 8 players. It was peer-hosted and ran
+on XBox and PS2.
+
+8-player network games would sometimes (~1 time in 500) hang on going into a
+round. One of the clients would simply stop after loading the level, stay on the
+loading screen and never actually enter the game.
+
+I spent ages tracking that bug. I made rounds automatically cycle after 10
+seconds, to give a higher repro rate. I put in a ton of logging. I scheduled
+after-hours play sessions where I would send out new builds to the team and set
+up 8-player games cycling to test.
+
+I read the code forwards, backwards, and in my sleep. Finally I tracked it down
+to the point where I knew what the problem was; I put in some code to fix it,
+pushed out a new build, made my tests, and it was fixed.
+
+That was Thursday. Everything was quiet over the weekend. On Tuesday testers
+reopened the bug. It was still happening.
+
+At this point I was sure it couldn't happen. And this wasn't hubris - I had been
+through that code every which way for the last 3 weeks. I fully understood the
+bug, and I had fixed it. And yet, it still happened.
+
+So I did everything I could to eliminate other sources of error. QA was using
+the right version. Nothing seemed to be amiss. Finally, I went back to the code,
+set a breakpoint in the function I'd fixed, and went to the disassembly view.
+
+My fix was in the source. My fix didn't show up in the disassembly. I called
+over a couple of other programmers to check that what I was seeing was real.
+
+Somehow the compiler was just ignoring my code. One of the other engineers
+checked the file in source control and found that the line endings were messed
+up. My single-line fix was preceded by a single-line comment - the compiler was
+eliding the lines so that it didn't see my code!
+
+We fixed the line endings and the bug was finally dead.
+
+Goldeneye gave us lots of bugs to fix. New gameplay features were going in
+quickly and I was constantly having to make them work over the network. Such was
+(is?) the life of a network programmer - many projects got networking bolted on
+near the end.
+
+** Bug Story III
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+\begin{center}
+Firewarrior NAT negotiation
+\end{center}
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Firewarrior used a peer-to-peer network model, and we had to establish the
+mesh of connections, so NAT negotiation was pretty important.
+
+We were using a GameSpy SDK to do NAT negotiation. And it just didn't work at
+all, really. Most NAT boxes (home broadband routers of the time) weren't letting
+us make connections. But some were. It was very puzzling.
+
+This was a bug I just solved by thinking. There was nothing to be done in terms
+of gathering data. Eventually I realised that I was misunderstanding how NAT
+negotiation had to work - I was trying to get machines A and B to connect to
+each other simultaneously. What I had to do was to impose an ordering such that
+one machine was the initiator and one was the respondent.
+
+Once I did that, the bug was solved as if by magic, and the programmer who saw
+me fix the bug just by thinking was suitably awestruck!
+
+This was a project where we had lots of issues with broadband routers.
+Compatibility testing was tough. Router firmware was sometimes buggy.
+
+(You still can't assume that a player behind a NAT will keep the same connection
+tuple during a "connected" UDP session...)
+
 * Further Notes                                                      :B_note:
 :PROPERTIES:
 :BEAMER_env: note
