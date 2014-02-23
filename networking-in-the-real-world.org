@@ -127,6 +127,9 @@ basically a glorified chatroom. For D3 my team did the whole Battle.net service.
 
 * Basics
 ** What's in this lecture?
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
 - Real world examples
 - Tons of practical advice
 - Some war stories
@@ -142,15 +145,15 @@ gone right for me, and where things have gone wrong.
 
 ** Why Network Programming?
 #+attr_latex: :align |c|r|r|r|
-|------+-----------+-------------+--------------------|
-| Year | CPU (MHz) | Memory (MB) | London-LA RTT (ms) |
-|------+-----------+-------------+--------------------|
-| 1995 |        90 |           8 |                200 |
-| 2000 |       400 |          32 |                200 |
-| 2005 |      1400 |         256 |                200 |
-| 2010 |      2660 |        4096 |                200 |
-| 2014 |      3330 |       16384 |                200 |
-|------+-----------+-------------+--------------------|
+|------+-----------+-------------+------------------|
+| Year | CPU (MHz) | Memory (MB) | Typical RTT (ms) |
+|------+-----------+-------------+------------------|
+| 1995 |        90 |           8 |              300 |
+| 2000 |       400 |          32 |              300 |
+| 2005 |      1400 |         256 |              300 |
+| 2010 |      2660 |        4096 |              300 |
+| 2014 |      3330 |       16384 |              300 |
+|------+-----------+-------------+------------------|
 
 - Networking programming stays interesting and challenging
 - Hiding latency is the constant problem to solve
@@ -292,15 +295,14 @@ However, our experience of Chinese networks has shown that it is not uncommon to
 have sustained high packet loss (~20%). Even with relatively high speed, high
 bandwidth connections.
 
-latency issues?
-asynchronous design
-fault-tolerant design
-converge to the correct state
-QoS issues
-automatic behaviours vs player-requested behaviours
-prediction issues
-anti-cheat designs
-time synchronization
+The fundamental issue here is that TCP solves a different problem. TCP solves
+the problem of efficient link utilization, not your problem of timely packet
+delivery. It may have occurred to you that some of your data needs to be
+reliably delivered and some needs to be timely but unreliable. Using TCP and UDP
+together is also problematic - TCP tends to affect the timely working of UDP.
+
+However, TCP can be used even for action games! SOCOM (an early PS2 FPS) used
+TCP.
 
 ** Synchronizing Time
 :PROPERTIES:
@@ -490,6 +492,8 @@ make sense for the game. eg. Health is high priority.
 - Each packet contains a sequence number
 - When components are serialised they remember the sequence number
 - Each packet header includes ACKs for previous packets received
+  - a sequence number and a bitfield of previous acks
+  - handle sequence number wraparound
 - Any gaps in the ACK stream are implicitly NAKed
 - Components from NAKed packets have their data re-dirtied
 
@@ -499,6 +503,9 @@ make sense for the game. eg. Health is high priority.
 :END:
 
 Most components are continually being re-dirtied anyway.
+
+You can also use ACK tracking to continually monitor RTTs and notice when things
+are getting bad so that you can back off sending frequency.
 
 ** Compressing data
 :PROPERTIES:
@@ -544,7 +551,7 @@ It is hard to notice artifacts in rotation even using just a byte.
 :END:
 - Some things need in-order delivery
 - Object creation/destruction events
-- Some objects can do simultaneous simulation
+- Some objects can do parallel simulation
 - Others must be kept up-to-date
 *** Notes                                                          :B_note:
 :PROPERTIES:
@@ -758,6 +765,28 @@ this approach is much more integrated into your game logic.
 :PROPERTIES:
 :BEAMER_act: [<+->]
 :END:
+- Client must reconcile its position with the server position
+- Server position is in the past
+- Client must rewind a little and replay recent input
+- Mostly this results in seamless fixup
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Typically the client can keep a circular buffer of recent inputs, rewind into
+the past to apply the server position, then replay. If the character simulation
+code is deterministic, this is usually pretty accurate and seamless.
+
+There may still be scenarios where a client needs to do further fixup because
+its position was altered by an external force. In such cases the fixup can be
+applied over several frames to avoid excessive warping.
+
+** Prediction III
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
 - A client can predict itself...
 - Use this information to know its actions are causing divergence
 - Therefore when to send an update
@@ -831,10 +860,173 @@ maintenance of PVS/occlusion information on the server. Again, if your game has
 ways to see remote locations this is something to keep in mind.
 
 * RTS issues
-** Input passing
-** E-sports and Fairness
+** Parallel Simulation
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Some games (eg RTS) have too many objects to sync
+- Input passing
+- Parallel simulation
 
-* Notes                                                              :B_note:
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+In an RTS, you have hundreds of units with complex state and AI. This is just
+too much to use a network model that sends state over the wire. So the solution
+is to send player inputs and make sure that machines can simulate the game
+deterministically in parallel.
+
+** Parallel Simulation Problems
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Random events
+- Camera-dependent events
+- Floating point machine differences
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+It is a very difficult and painstaking process to ensure that a simulation can
+proceed on two machines identically. The entirety of the network game is at the
+mercy of all the programmers. Many of whom don't have a sensibility for things
+that will break the network game.
+
+The simulations will need to have synchronized random number pools. It is worth
+having two RNGs, one which is synchronized (for events that actually have
+gameplay impact) and one that isn't (purely for display effects).
+
+Be wary of things that are triggered by players looking at them.
+
+Using floating point is problematic and best avoided if possible. Machine
+differences, optimizations, instruction sets etc, mean that it is difficult to
+ensure identical results of floating point calculations. Physics engines are
+also difficult to constrain to be deterministic - they tend to have different
+behaviours on different speed machines.
+
+(This is also a problem with non-networked games: if your cutscenes use physics,
+prepare for one-in-a-thousand failures). (MoHPA story)
+
+There is no real way to fix all the errors that cause network state divergence,
+other than by combing the code and logs.
+
+** E-sports and Fairness
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Lockstep model is old but still important
+- Fairness trumps latency hiding
+- High level RTS gameplay is twitch gameplay
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+It is an odd thought, but a true one, that FPS and RTS gameplay types swap over
+between low and high levels. ie. Low level FPS gameplay is twitch gameplay, and
+low level RTS gameplay is slow-paced strategic gameplay. But when you get to
+high level play, FPS is strategic - primarily based around knowing where your
+opponent is through audio cues and circuit timings - and RTS is twitch play:
+split-second microing of units and responding to resource challenges.
+
+E-sports require fairness over and above latency hiding. It is not acceptable
+for the clients to miss a gameturn (input opportunity). So the old lockstep
+model still exists in e-sports titles: the server waits gathers all clients'
+inputs before processing and sending out the game turn.
+
+** Bug Story
+\begin{center}
+Populous: The Beginning Network Model
+\end{center}
+*** Server                                                    :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+name: servercode
+#+begin_src c
+while (!game_over) {
+  recv_client_inputs();
+  send_gameturn();
+  simulate();
+}
+#+end_src
+
+*** Client                                                  :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+name: clientcode
+#+begin_src c
+while (!game_over) {
+  if (receive_gameturn()) {
+    simulate();
+  }
+  render();
+  send_input();
+}
+#+end_src
+
+*** Underneath                                            :B_ignoreheading:
+:PROPERTIES:
+:BEAMER_env: ignoreheading
+:END:
+\begin{center}
+Spot the bug!
+\end{center}
+
+** Bug Story
+\begin{center}
+Populous: The Beginning Network Model
+\end{center}
+*** Server                                                    :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+name: servercode
+#+begin_src c
+while (!game_over) {
+  recv_client_inputs();
+  send_gameturn();
+  simulate();
+}
+#+end_src
+
+*** Client                                                  :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+name: clientcode
+#+begin_src c
+while (!game_over) {
+  while (receive_gameturn()) {
+    simulate();
+  }
+  render();
+  send_input();
+}
+#+end_src
+
+*** Underneath                                            :B_ignoreheading:
+:PROPERTIES:
+:BEAMER_env: ignoreheading
+:END:
+\definecolor{defaultmintedgreen}{RGB}{0,128,0}
+\begin{center}
+\texttt{\textcolor{defaultmintedgreen}{if}}
+changes to
+\texttt{\textcolor{defaultmintedgreen}{while}}
+\end{center}
+
+* Further Notes                                                      :B_note:
 :PROPERTIES:
 :BEAMER_env: note
 :END:
