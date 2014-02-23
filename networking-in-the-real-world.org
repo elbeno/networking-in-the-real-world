@@ -113,7 +113,7 @@ development stories I can tell you about.
 :BEAMER_env: column
 :END:
 #+attr_latex: width=\textwidth
-[[./Diablo_III_cover.png]]
+[[./d3-box.jpg]]
 
 *** Notes                                                          :B_note:
 :PROPERTIES:
