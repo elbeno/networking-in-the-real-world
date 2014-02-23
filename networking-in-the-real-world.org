@@ -379,7 +379,7 @@ well, you'd be advised to minimise the number of connections made.
 
 Peer-to-peer is harder to establish the mesh especially in the presence of NAT.
 
-(Firewarrior story)
+(Firewarrior NAT negotiation story)
 
 Peer-to-peer makes some things easier (eg. logic for host migration). But other
 things are harder: determining consensus among the players.
@@ -718,7 +718,7 @@ This can be done entirely as a graphical effect if your engine is architected
 that way. It might make sense to do this for things which are primarily
 graphical, ie. animation posing.
 
-** Prediction
+** Prediction I
 :PROPERTIES:
 :BEAMER_act: [<+->]
 :END:
@@ -728,15 +728,14 @@ graphical, ie. animation posing.
   - Rotational velocity
 - Failure modes
   - Players run into walls
-  - Take corners wide
   - Warping back
+- Take corners wide
 - Fundamentally a game state/logic approach
 
 *** Notes:                                                         :B_note:
 :PROPERTIES:
 :BEAMER_env: note
 :END:
-
 Dead reckoning can usually be made to look good based on just position, velocity
 and rotation angle. Occasionally a game will require predictions of higher-order
 dynamics - acceleration and rotational velocity.
@@ -754,11 +753,82 @@ player has already taken a path almost the same as the one you're interpolating.
 In the case of prediction, there might be obstacles ahead that prevent motion,
 and if you don't take account of them, you're going to clip through walls. So
 this approach is much more integrated into your game logic.
-** Prediction Issues
-Networking and physics
-Networking and animation
-Only pose characters to determine true hit after broadphase collision
-Variable physics timestep should be capped? Debuggability
+
+** Prediction II
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- A client can predict itself...
+- Use this information to know its actions are causing divergence
+- Therefore when to send an update
+- You can mix a timeout with this also
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+This can be a useful alternative to save bandwidth over regular updates. But it
+should be used with care - the divergence thresholds shouldn't be too large,
+considering that a roundtrip will still be incurred from the point where
+divergence is detected.
+
+Last thoughts on prediction: important events may require rewinding
+time/snapping objects eg. death positions. There are circumstances when somebody
+is going to see/experience the "wrong" thing. Oh well.
+
+** Subsystem Considerations
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Play nice with the physics engine
+  - Moving things into each other is a bad idea, you're not going to have a good
+    day
+  - A capped timestep is essential for your debugging sanity
+  - A continuous collision system is usually necessary
+- Animation tricks
+  - A headless server need not pose characters until necessary
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+It's bad news when things interpenetrate; large forces usually result.
+
+Headless server can slide characters around and defer posing them until pose
+information is necessary to resolve collisions, eg headshots.
+
+** More on Update Logic
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Variable update frequency
+  - Proximity
+  - Velocity
+  - Role (eg. target/team)
+  - Visibility (PVS)
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+There are a lot of ways you can structure the update frequency and priority of
+your various game entities.
+
+You can update based on proximity: this is a basic way to favour fidelity of
+close objects.
+
+Another basic thing to do is to update faster objects more frequently, to
+hopefully achieve higher fidelity and fewer warping artifacts.
+
+It fails when you have scenarios like sniping where you're looking at something
+far away, or when keeping track of team-mates, so you can mix in role-based
+update logic.
+
+Another thing to consider is visibility-based updates in general and the
+maintenance of PVS/occlusion information on the server. Again, if your game has
+ways to see remote locations this is something to keep in mind.
 
 * RTS issues
 ** Input passing
