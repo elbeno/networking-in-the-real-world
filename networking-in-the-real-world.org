@@ -5,8 +5,10 @@
 #+DESCRIPTION:
 #+KEYWORDS: networking real world
 #+LANGUAGE:  en
-#+OPTIONS:   H:2 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
+#+OPTIONS:   H:2 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:nil *:t <:t
 #+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
 #+SELECT_TAGS: export
 #+EXCLUDE_TAGS: noexport
 
@@ -123,9 +125,7 @@ infrastructure issues than actual gameplay networking.
 For Theme Park World, I wrote the online park publishing & visiting code,
 basically a glorified chatroom. For D3 my team did the whole Battle.net service.
 
-
 * Basics
-
 ** What's in this lecture?
 - Real world examples
 - Tons of practical advice
@@ -249,10 +249,10 @@ prefetching and/or offload it to a fast piece of hardware (PS3 SPU).
 :PROPERTIES:
 :BEAMER_act: [<+->]
 :END:
-1. Your data is usually ephemeral
-1. It doesn't matter if one or two packets get dropped
-1. UDP can do NAT traversal
-1. UDP packet overhead is lower
+- Your data is usually ephemeral
+- It doesn't matter if one or two packets get dropped
+- UDP can do NAT traversal
+- UDP packet overhead is lower
 
 *** Notes                                                          :B_note:
 :PROPERTIES:
@@ -390,9 +390,7 @@ asymmetric plans.
 
 Peer-to-peer doesn't scale.
 
-
 * FPS issues
-
 ** Basic FPS Network Model
 :PROPERTIES:
 :BEAMER_act: [<+->]
@@ -403,7 +401,6 @@ Peer-to-peer doesn't scale.
 - Clients converge to the true state
 - 90% of data is for movement
 - Semi-guaranteed protocol over UDP
-
 
 *** Notes                                                          :B_note:
 :PROPERTIES:
@@ -426,7 +423,7 @@ rather, all machine are continuously converging to the correct state.
 - Relatively few active objects at a time
 - High render rate, low logic rate
 - Available headless server
-- Simple/Nonexistant AI
+- Simple/Nonexistent AI
 
 *** Notes                                                          :B_note:
 :PROPERTIES:
@@ -453,7 +450,7 @@ frequency of packet send can be dialled down also (eg 10Hz or even lower).
 - Entity-component model
   - Movement/Position/Rotation
   - Animation state
-  - Health/Armour
+  - Health/Armour/Death state
 - Components are marked dirty as their state is updated
 - Components map to network "channels"
 - Network channels are given priorities
@@ -503,31 +500,6 @@ make sense for the game. eg. Health is high priority.
 
 Most components are continually being re-dirtied anyway.
 
-** Object Creation/Destruction
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
-- Object creation/destruction events
-- Some objects can do simultaneous simulation
-- Others must be kept up-to-date
-
-*** Notes                                                          :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
-
-It's usually important to impose an ordering on object creation and
-destruction - objects can't be destroyed before they get created. Short-lived
-objects can be problematic. So this is an area where dirty objects can't fully
-die but must become ghosts until their dead state has been fully ACKed.
-
-Some objects just need a creation packet and then can be simulated independently
-on every machine. eg. short-lived ballistic projectiles (grenades) or stationary
-things (timed mines). Yes, it's possible that something could get in their path
-and result in two machines having divergent simulations, but if the projectile
-is going to explode soon anyway, odds are nobody will really notice. You do what
-you can get away with.
-
 ** Compressing data
 :PROPERTIES:
 :BEAMER_act: [<+->]
@@ -566,26 +538,227 @@ Matrices can become quaternions. (16 numbers -> 4 numbers).
 
 It is hard to notice artifacts in rotation even using just a byte.
 
-** Going to the Dark Side
+** Other issues
 :PROPERTIES:
 :BEAMER_act: [<+->]
 :END:
-- How much authority do you let a client have?
-- Responsiveness vs cheating
+- Some things need in-order delivery
+- Object creation/destruction events
+- Some objects can do simultaneous simulation
+- Others must be kept up-to-date
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+So, some things get troublesome if you use a simple model of dirtiness/ephemeral
+updates. Some things are order-dependent.
+
+eg. High frequency weapons are often handled with a firing on/off message. You
+don't want to get them stuck on. (This is a very common bug.)
+
+It's usually important to impose an ordering on object creation and
+destruction - objects can't be destroyed before they get created. Short-lived
+objects can be problematic. So this is an area where dirty objects can't fully
+die but must become ghosts until their dead state has been fully ACKed.
+
+Some objects just need a creation packet and then can be simulated independently
+on every machine. eg. short-lived ballistic projectiles (grenades) or stationary
+things (timed mines). Yes, it's possible that something could get in their path
+and result in two machines having divergent simulations, but if the projectile
+is going to explode soon anyway, odds are nobody will really notice. You do what
+you can get away with.
+** Race conditions
+*** Alice's machine                                           :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+attr_beamer: :overlay <2->
+- Bob has 10% health.
+#+attr_beamer: :overlay <3->
+- Alice hits Bob for 20% damage.
+#+attr_beamer: :overlay <4->
+- Bob dies.
+*** Bob's machine                                             :B_block:BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.4
+:BEAMER_env: block
+:END:
+#+attr_beamer: :overlay <5->
+- Bob has 10% health.
+#+attr_beamer: :overlay <6->
+- Bob picks up a health pack for a 50% health boost.
+#+attr_beamer: :overlay <7->
+- Alice hits Bob for 20% damage.
+#+attr_beamer: :overlay <8->
+- Bob has 40% health.
+*** Underneath                                            :B_ignoreheading:
+:PROPERTIES:
+:BEAMER_env: ignoreheading
+:END:
+\pause\pause\pause\pause\pause\pause\pause\pause
+\begin{center}
+What to do about this?
+\end{center}
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Neither client here really knows what's going to happen on the server. So Alice
+can't pretend Bob is dead, and Bob doesn't know whether he's alive. He's
+Schroedinger's Bob! It's a straight race, and the server must decide.
+** Race conditions
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Some things are problematic for races
+  - eg. Health/Death
+  - Divergent simulations would be bad
+- You can use an accumulator model
+- Take care to deal with overflow
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Either way, you need the server to adjudicate, and you want it to be as fair as
+possible. You will note that the network model as described is designed to send
+absolute state. Because we're working with an unreliable transport layer, it
+doesn't deal well with state changes, especially not when they are very
+impactful to the game. It's hard to reconcile a divergent simulation of
+life/death.
+
+One way to solve this issue is to use an accumulator model for health and
+separately for damage. All the health Bob has accumulated this life is one
+variable, and all the damage he's sustained is another. Both of these variables
+can be easily dealt with in our existing replication model. The server merely
+has to adjudicate Bob's life, i.e. each frame determine whether the total damage
+he's sustained exceeds the total health he's accumulated. And the event of Bob's
+demise can be separated from the idea of his health and damage.
+
+In general my approach to this sort of thing (where there is a policy decision
+to be made) has been to favour life over death. Players get more frustrated if
+they die and are more willing to forgive someone miraculously living through a
+hail of bullets.
+
+Likewise races occur over collecting powerups. In such cases my policy has been
+simply to give both players the powerup. Make everybody happy.
+** Latency Hiding: Simple Stuff
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Clients can do simple display feedback
+  - Hit animations
+  - Audio
+  - Blood splats
+- Some things aren't going to fail
+  - eg. Decrementing ammo
 
 *** Notes                                                          :B_note:
 :PROPERTIES:
 :BEAMER_env: note
 :END:
 
-
+The simple stuff for latency hiding is in the audiovisual feedback that the
+client can give. You can show stuff that doesn't affect the game state -
+particles, audio cues, sometimes hit animations.
 
 ** Interpolation/Prediction
+\begin{center}
+Predict the future\\
+\\
+\pause
+OR (and?)\\
+\\
+\pause
+Interpolate the past
+\end{center}
 
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+Your basic choice is this: to try to predict what is happening now based on the
+last information you received, or to treat the information received as a future
+event and interpolate towards it.
 
+Both methods are viable depending on your game type. You might use both methods
+for different subsystems, eg. predict movement but interpolate animations.
+** Interpolation
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Simple lerps
+- Failure modes
+  - Players stop
+  - Warping forwards
+- Take corners close
+- Fundamentally a graphical/display approach
+
+*** Notes                                                          :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+With an interpolation approach, you are always interpolating towards your
+current information. How divergent your current information is from your current
+game state generally controls how aggressive the interpolation has to be.
+(Alternatively, how broken it is going to look.)
+
+The failure mode (if you don't get data) is that players approach their goal
+positions and stop - this generally looks OK. The recovery is likely to look
+weird though - a long warp forwards.
+
+Generally because the player's actual position is ahead of where you are
+interpolating to, the standard systemic inaccuracy of this model is that players
+tend to cut corners close.
+
+This can be done entirely as a graphical effect if your engine is architected
+that way. It might make sense to do this for things which are primarily
+graphical, ie. animation posing.
+
+** Prediction
+:PROPERTIES:
+:BEAMER_act: [<+->]
+:END:
+- Dead reckoning
+- Position/Velocity/Angle
+  - Acceleration
+  - Rotational velocity
+- Failure modes
+  - Players run into walls
+  - Take corners wide
+  - Warping back
+- Fundamentally a game state/logic approach
+
+*** Notes:                                                         :B_note:
+:PROPERTIES:
+:BEAMER_env: note
+:END:
+
+Dead reckoning can usually be made to look good based on just position, velocity
+and rotation angle. Occasionally a game will require predictions of higher-order
+dynamics - acceleration and rotational velocity.
+
+Your primary failure mode is going to be that things overshoot and continue, run
+into walls, etc. If you have no caps on motion in the absence of timely data,
+this can look quite bad.
+
+The standard systemic inaccuracy of this model is that players tend to take
+corners wide.
+
+This can't really be done as a graphical effect in the same way as
+interpolation, because in the case of interpolating movement, you know that the
+player has already taken a path almost the same as the one you're interpolating.
+In the case of prediction, there might be obstacles ahead that prevent motion,
+and if you don't take account of them, you're going to clip through walls. So
+this approach is much more integrated into your game logic.
+** Prediction Issues
 Networking and physics
 Networking and animation
 Only pose characters to determine true hit after broadphase collision
+Variable physics timestep should be capped? Debuggability
 
 * RTS issues
 ** Input passing
