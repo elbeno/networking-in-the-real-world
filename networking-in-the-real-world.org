@@ -125,8 +125,18 @@ basically a glorified chatroom. For D3 my team did the whole Battle.net service.
 * Basics
 ** What's in this lecture?
 - Real world examples
-- Tons of practical advice
+- Practical advice
 - Some war stories
+- Spartan slides
+
+*** Quote                                                 :B_ignoreheading:
+:PROPERTIES:
+:BEAMER_env: ignoreheading
+:END:
+\begin{center}
+"Experience is simply the name we give our mistakes."
+\end{center}
+\hfill -- /Oscar Wilde/
 
 *** Notes                                                        :B_noteNH:
 :PROPERTIES:
@@ -136,6 +146,12 @@ My aim for this lecture is to expand on what you've already learned in the
 academic context, show you how it's applied in the industry, make you aware
 of messy real-world issues, and tell you some stories of where things have
 gone right for me, and where things have gone wrong.
+
+Sorry about the spartan slides. They're sort of deliberate - most of the
+important stuff is in the talk. Although I regret not having more pictures.
+
+I'm concentrating mostly on expanding and giving context to Magda's lectures to
+do with the major problem of networking game programming: how to hide latency.
 
 ** Why Network Programming?
 #+attr_latex: :align |c|r|r|r|
@@ -200,6 +216,11 @@ prefetching and/or offload it to a fast piece of hardware (PS3 SPU).
 ** TCP vs UDP
 - Your most basic latency-affecting decision
 - Game design and genre influences this
+*** Notes                                                        :B_noteNH:
+:PROPERTIES:
+:BEAMER_env: noteNH
+:END:
+(none)
 
 ** TCP vs UDP
 *** TCP                                                     :B_block:BMCOL:
@@ -233,6 +254,12 @@ prefetching and/or offload it to a fast piece of hardware (PS3 SPU).
 - Immediate send
 #+attr_beamer: :overlay <5->
 - Single multiplexed socket
+
+*** Notes                                                        :B_noteNH:
+:PROPERTIES:
+:BEAMER_env: noteNH
+:END:
+(none)
 
 ** TCP or UDP?
 - Your data is usually ephemeral
@@ -675,6 +702,7 @@ event and interpolate towards it.
 
 Both methods are viable depending on your game type. You might use both methods
 for different subsystems, eg. predict movement but interpolate animations.
+
 ** Interpolation
 - Simple lerps
 - Failure modes
@@ -941,6 +969,12 @@ while (!game_over) {
 Spot the bug!
 \end{center}
 
+*** Notes                                                        :B_noteNH:
+:PROPERTIES:
+:BEAMER_env: noteNH
+:END:
+(Can anyone point out the bug?)
+
 ** Bug Story
 \begin{center}
 Populous: The Beginning Network Model
@@ -990,8 +1024,6 @@ changes to
 #+begin_latex
 \end{frame}
 \note{
-(Can anyone point out the bug?)
-
 This bug was quite subtle and hard to spot because it took a while to show up in
 games. Games had to last a while before the bug gradually took hold. But the
 effect was that slowly, clients would get further and further behind the server.
@@ -1110,6 +1142,12 @@ Slides \& notes available at
 \linebreak[4]\linebreak[4]
 \texttt{http://github.com/elbeno/networking-in-the-real-world}
 \end{center}
+
+*** Notes                                                        :B_noteNH:
+:PROPERTIES:
+:BEAMER_env: noteNH
+:END:
+(none)
 
 * Unused Notes                                                     :noexport:
 - MMO issues
