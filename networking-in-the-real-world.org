@@ -28,21 +28,18 @@
 #+LaTeX_CLASS_OPTIONS: [presentation, bigger]
 
 * Introduction
-** Who Am I?
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
+** Who is this guy?
 - Ben Deane
 - Programmer at Blizzard on the Battle.net team
 - Lifelong\mbox{*} network game programmer
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 At least for my working life...
 
-** Who Am I?
+** What has he done?
 :PROPERTIES:
 :BEAMER_act: [<+(-1)->]
 :END:
@@ -61,14 +58,14 @@ At least for my working life...
 #+attr_latex: width=\textwidth
 [[./starcraft-2-box.jpg]]
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 I've done RTS games. Populous 3 was first game I did that was properly
 architected for Internet play.
 
-** Who Am I?
+** What has he done?
 :PROPERTIES:
 :BEAMER_act: [<+(-1)->]
 :END:
@@ -87,16 +84,16 @@ architected for Internet play.
 #+attr_latex: width=\textwidth
 [[./Grabox.jpg]]
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 I've done FPS games. Firewarrior was Europe's first PS2 Internet-playable game.
 It used a peer-to-peer network topology. Goldeneye: RA was a poorly received
 game, but the network game had some fun features and some interesting
 development stories I can tell you about.
 
-** Who Am I?
+** What has he done?
 :PROPERTIES:
 :BEAMER_act: [<+(-1)->]
 :END:
@@ -115,9 +112,9 @@ development stories I can tell you about.
 #+attr_latex: width=\textwidth
 [[./d3-box.jpg]]
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 I've done other types of games, and games where I worked on more network
 infrastructure issues than actual gameplay networking.
@@ -127,20 +124,17 @@ basically a glorified chatroom. For D3 my team did the whole Battle.net service.
 
 * Basics
 ** What's in this lecture?
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Real world examples
 - Tons of practical advice
 - Some war stories
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 My aim for this lecture is to expand on what you've already learned in the
-academic context, show you how it's applied in the industry, make you think
-about messy real-world issues, and tell you some stories of where things have
+academic context, show you how it's applied in the industry, make you aware
+of messy real-world issues, and tell you some stories of where things have
 gone right for me, and where things have gone wrong.
 
 ** Why Network Programming?
@@ -159,9 +153,9 @@ gone right for me, and where things have gone wrong.
 - Hiding latency is the constant problem to solve
 - Non-network programmers just discovered concurrency?
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 Network programming doesn't really get easier as machines get faster, unlike
 most other programming disciplines.
@@ -175,31 +169,23 @@ hundreds of MB of logs for a problem that occurs 0.1% of the time in a
 16-machine network game, then tell me how hard your threading bug is.
 
 ** Real World vs Academia
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 The Real World is what you learn but also:
 - messy
 - dealing with edge cases
 - cutting corners
 - taking advantage of hardware
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
-Everything you learn in school is applicable to the real world. But...
-
-Errors happen all the time. You need to deal with them.
-
-Edge cases happen all the time. You can't hope to cover all the weird and
+Everything you learn in school is applicable to the real world. But errors and
+edge cases happen all the time. You can't hope to cover all the weird and
 wonderful setups that players have, in your dev environment.
 
 On the plus side, you can cut a lot of corners. The objective is to make a game
 fun, not to model the real world accurately or have any kind of internal
 consistency.
-
-And you have to deal with hardware.
 
 Good example (although not network-related) of where the real-world differs from
 academia is from UE3 frustum culling code. Conventional algorithms class would
@@ -249,19 +235,15 @@ prefetching and/or offload it to a fast piece of hardware (PS3 SPU).
 - Single multiplexed socket
 
 ** TCP or UDP?
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Your data is usually ephemeral
 - It doesn't matter if one or two packets get dropped
 - UDP can do NAT traversal
 - UDP packet overhead is lower
 
-*** Notes                                                          :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
-You all know the difference between UDP and TCP
+#+begin_latex
+\end{frame}
+\note{
+You all know the difference between UDP and TCP.
 
 It's "received wisdom" in action games to use one's own partially-guaranteed
 protocol over UDP, a few of reasons for this:
@@ -278,9 +260,10 @@ protocol over UDP, a few of reasons for this:
 4. UDP packet overhead is lower.
 
 However, look again at point 1 and consider real life network behaviours. How
-common is sustained or sporadic loss?
-
-I remember a gd_algorithms group thread from some years ago in which it was
+common is sustained or sporadic loss?}
+\newpage
+\note{
+I remember a gd-algorithms group thread from some years ago in which it was
 argued that packet loss is not normally nicely sustained at a low rate, but is
 bursty. That is to say that a network dropout of a second or two would probably
 stall your game just as badly on UDP as on TCP.
@@ -292,9 +275,11 @@ This was/is probably true in the US and other countries with mature internet
 infrastructure.
 
 However, our experience of Chinese networks has shown that it is not uncommon to
-have sustained high packet loss (~20%). Even with relatively high speed, high
-bandwidth connections.
+have sustained high packet loss (\textasciitilde{}20\%). Even with relatively
+high speed, high bandwidth connections.}
 
+\newpage
+\note{
 The fundamental issue here is that TCP solves a different problem. TCP solves
 the problem of efficient link utilization, not your problem of timely packet
 delivery. It may have occurred to you that some of your data needs to be
@@ -302,31 +287,49 @@ reliably delivered and some needs to be timely but unreliable. Using TCP and UDP
 together is also problematic - TCP tends to affect the timely working of UDP.
 
 However, TCP can be used even for action games! SOCOM (an early PS2 FPS) used
-TCP.
+TCP.}
+#+end_latex
 
-** Synchronizing Time
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
-- Games typically use an NTP-like algorithm
+** Synchronizing Time I
+Method 1. An NTP-like algorithm
+- Estimate RTT with smoothing
+- Adjust clock by (time on wire)/2
 - Part of connection establishment
 - Sync to epoch (eg. start of level)
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
-Games usually do pretty much what you'd expect.
+Games often usually do pretty much what you'd expect.
 
 Send a packet, record RTT, subtract time at the remote end, divide by two. This
 gives you a rough estimate of your one-way trip time.
 
 Do that a few times to try to get a reasonable average, discard outliers, etc.
-Very simple statistical smoothing. Iterate your guesses until you're good
-enough.
+Very simple statistical smoothing.
 
 Sometimes it's enough to sync once, other times it's at the beginning of a
 level. Generally it depends on the game and when the connection is made.
+
+** Synchronizing Time II
+Method 2. Iterative approach
+- Client guesses time on server
+- Server tells client how wrong it is
+- Client adjusts its clock and repeats
+- Stop when you're within tolerance
+
+*** Notes                                                        :B_noteNH:
+:PROPERTIES:
+:BEAMER_env: noteNH
+:END:
+
+This method converges pretty quickly. This is a quantitatively different
+approach from method 1.
+
+Method 1 tries to measure accurately, then calculate. Method 2 tries to guess
+and improve the guess. To my mind, method 2 is the simpler method. I find that
+iterative algorithms are often overlooked as a solution.
 
 ** Network topologies
 *** Peer-hosted                                               :B_block:BMCOL:
@@ -365,11 +368,11 @@ level. Generally it depends on the game and when the connection is made.
 #+attr_beamer: :overlay <6->
 - everyone needs upload BW
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
-Peer-to-peer is more complex code? Client-server gives a nice model of
+Peer-to-peer code is more complex. Client-server gives a nice model of
 authority. (The server can cheat vs anyone can cheat). Or in a more relaxed view
 of things, the server has an advantage.
 
@@ -394,9 +397,6 @@ Peer-to-peer doesn't scale.
 
 * FPS issues
 ** Basic FPS Network Model
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Client-server/peer-hosted
 - Time-synched to within a few ms
 - Object state is transferred
@@ -404,9 +404,9 @@ Peer-to-peer doesn't scale.
 - 90% of data is for movement
 - Semi-guaranteed protocol over UDP
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 Object state is transferred vs inputs being transferred. This is not a parallel
@@ -417,9 +417,6 @@ The game state does not really exist in its true form on any one machine,
 rather, all machine are continuously converging to the correct state.
 
 ** Typical FPS Choices
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Two bullet types
 - High fidelity human animation (=> head shots)
 - Relatively few active objects at a time
@@ -427,28 +424,21 @@ rather, all machine are continuously converging to the correct state.
 - Available headless server
 - Simple/Nonexistent AI
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 Lightspeed bullets vs projectiles. Lightspeed bullets are interesting for
 prediction models.
 
-On a headless server, animation can be optimized. It is possible for the server
-to slide the characters around and do only broadphase collision on their
-bounding boxes. At the point where a bullet collision occurs with a character,
-only then does the server need to compute the character pose to do the
-narrowphase collision (to determine whether it was a head shot).
+Bullet hits typically require interaction with the animation system.
 
 FPSes typically run at high frame rate but they do relatively little logic. The
 logic (eg pathfinding) can run at a low Hz. With a decent network engine, the
 frequency of packet send can be dialled down also (eg 10Hz or even lower).
 
 ** Example Semi-Guaranteed Protocol
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Entity-component model
   - Movement/Position/Rotation
   - Animation state
@@ -457,38 +447,38 @@ frequency of packet send can be dialled down also (eg 10Hz or even lower).
 - Components map to network "channels"
 - Network channels are given priorities
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 When a component is dirtied, it gets assigned a send priority based on its
 network channel priority.
 
 ** Constructing Packets
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Keep dirty components in a priority queue
 - Periodically fill a packet by priority
-- Max packet size = 576 bytes
+- Max packet size = 548 bytes
 - Anything left out gets increased priority
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 Dirty components are kept in a priority queue to send.
-576 bytes is the minimum IPv4 datagram size that all hosts must accept.
+
+(Can anyone tell me why the max packet size should be 548 bytes?)
+
+576 bytes is the minimum IPv4 datagram size that all hosts must accept (RFC
+791).
+
+Actual data size is 576 - 20 - 8 = 548. (ie. minus size of IP and UDP headers).
 
 Amount of priority increase and priority of the channel are policy values that
 make sense for the game. eg. Health is high priority.
 
 ** ACKing and NAKing
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Each packet contains a sequence number
 - When components are serialised they remember the sequence number
 - Each packet header includes ACKs for previous packets received
@@ -497,9 +487,9 @@ make sense for the game. eg. Health is high priority.
 - Any gaps in the ACK stream are implicitly NAKed
 - Components from NAKed packets have their data re-dirtied
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 Most components are continually being re-dirtied anyway.
@@ -508,9 +498,6 @@ You can also use ACK tracking to continually monitor RTTs and notice when things
 are getting bad so that you can back off sending frequency.
 
 ** Compressing data
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Conserving bandwidth is important
 - Bitpacking protocols are common
 - Range data types
@@ -519,9 +506,9 @@ are getting bad so that you can back off sending frequency.
 - 4x4 matrices are wasteful
 - Rotations can be heavily quantized
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 It is usually important to conserve bandwidth as much as possible. This was true
 15 years ago and it's true now. If bandwidth creeps up to near link capacity, it
@@ -533,29 +520,26 @@ Generalized compression is sometimes used, although less often than you'd think.
 
 Range-bounded integers can use no more bits than you need.
 
-Position can be converted to fixed-size grid coordinate within a level. (Take
+Position can be converted to fixed-size grid coordinate within a level. Take
 care over the origin offset though - it's common for levels to be built nowhere
 near (0,0).
 
-Height position in particular is often susceptible to quantization. We mostly
-live on a 2D plane, and engines can automatically move players to a sensible
-ground height.
+Height coord in particular is often suitable for quantization. We mostly live on
+a 2D plane, and engines can automatically move players to a sensible ground
+height.
 
 Matrices can become quaternions. (16 numbers -> 4 numbers).
 
 It is hard to notice artifacts in rotation even using just a byte.
 
 ** Other issues
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Some things need in-order delivery
 - Object creation/destruction events
 - Some objects can do parallel simulation
 - Others must be kept up-to-date
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 So, some things get troublesome if you use a simple model of dirtiness/ephemeral
@@ -573,8 +557,8 @@ Some objects just need a creation packet and then can be simulated independently
 on every machine. eg. short-lived ballistic projectiles (grenades) or stationary
 things (timed mines). Yes, it's possible that something could get in their path
 and result in two machines having divergent simulations, but if the projectile
-is going to explode soon anyway, odds are nobody will really notice. You do what
-you can get away with.
+is going to explode soon anyway, odds are nobody will really notice.
+
 ** Race conditions
 *** Alice's machine                                           :B_block:BMCOL:
 :PROPERTIES:
@@ -608,32 +592,28 @@ you can get away with.
 \begin{center}
 What to do about this?
 \end{center}
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 Neither client here really knows what's going to happen on the server. So Alice
 can't pretend Bob is dead, and Bob doesn't know whether he's alive. He's
 Schroedinger's Bob! It's a straight race, and the server must decide.
 ** Race conditions
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Some things are problematic for races
   - eg. Health/Death
   - Divergent simulations would be bad
 - You can use an accumulator model
 - Take care to deal with overflow
-*** Notes                                                          :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
 
+#+begin_latex
+\end{frame}
+\note{
 Either way, you need the server to adjudicate, and you want it to be as fair as
 possible. You will note that the network model as described is designed to send
 absolute state. Because we're working with an unreliable transport layer, it
-doesn't deal well with state changes, especially not when they are very
+doesn't deal well with discrete events, especially not when they are very
 impactful to the game. It's hard to reconcile a divergent simulation of
 life/death.
 
@@ -643,19 +623,19 @@ variable, and all the damage he's sustained is another. Both of these variables
 can be easily dealt with in our existing replication model. The server merely
 has to adjudicate Bob's life, i.e. each frame determine whether the total damage
 he's sustained exceeds the total health he's accumulated. And the event of Bob's
-demise can be separated from the idea of his health and damage.
-
+demise can be separated from the idea of his health and damage.}
+\newpage
+\note{
 In general my approach to this sort of thing (where there is a policy decision
 to be made) has been to favour life over death. Players get more frustrated if
-they die and are more willing to forgive someone miraculously living through a
+they die; they are more willing to forgive someone miraculously living through a
 hail of bullets.
 
 Likewise races occur over collecting powerups. In such cases my policy has been
-simply to give both players the powerup. Make everybody happy.
+simply to give both players the powerup. Make everybody happy.}
+#+end_latex
+
 ** Latency Hiding: Simple Stuff
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Clients can do simple display feedback
   - Hit animations
   - Audio
@@ -663,9 +643,9 @@ simply to give both players the powerup. Make everybody happy.
 - Some things aren't going to fail
   - eg. Decrementing ammo
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 The simple stuff for latency hiding is in the audiovisual feedback that the
@@ -674,18 +654,20 @@ particles, audio cues, sometimes hit animations.
 
 ** Interpolation/Prediction
 \begin{center}
-Predict the future\\
-\\
+Predict the future
+\linebreak[4]
+\linebreak[4]
 \pause
-OR (and?)\\
-\\
+OR (and?)
+\linebreak[4]
+\linebreak[4]
 \pause
 Interpolate the past
 \end{center}
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 Your basic choice is this: to try to predict what is happening now based on the
 last information you received, or to treat the information received as a future
@@ -694,9 +676,6 @@ event and interpolate towards it.
 Both methods are viable depending on your game type. You might use both methods
 for different subsystems, eg. predict movement but interpolate animations.
 ** Interpolation
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Simple lerps
 - Failure modes
   - Players stop
@@ -704,9 +683,9 @@ for different subsystems, eg. predict movement but interpolate animations.
 - Take corners close
 - Fundamentally a graphical/display approach
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 With an interpolation approach, you are always interpolating towards your
 current information. How divergent your current information is from your current
@@ -726,9 +705,6 @@ that way. It might make sense to do this for things which are primarily
 graphical, ie. animation posing.
 
 ** Prediction I
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Dead reckoning
 - Position/Velocity/Angle
   - Acceleration
@@ -739,9 +715,9 @@ graphical, ie. animation posing.
 - Take corners wide
 - Fundamentally a game state/logic approach
 
-*** Notes:                                                         :B_note:
+*** Notes:                                                       :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 Dead reckoning can usually be made to look good based on just position, velocity
 and rotation angle. Occasionally a game will require predictions of higher-order
@@ -762,17 +738,14 @@ and if you don't take account of them, you're going to clip through walls. So
 this approach is much more integrated into your game logic.
 
 ** Prediction II
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Client must reconcile its position with the server position
 - Server position is in the past
 - Client must rewind a little and replay recent input
 - Mostly this results in seamless fixup
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 Typically the client can keep a circular buffer of recent inputs, rewind into
@@ -784,17 +757,14 @@ its position was altered by an external force. In such cases the fixup can be
 applied over several frames to avoid excessive warping.
 
 ** Prediction III
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - A client can predict itself...
 - Use this information to know its actions are causing divergence
 - Therefore when to send an update
 - You can mix a timeout with this also
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 This can be a useful alternative to save bandwidth over regular updates. But it
@@ -807,9 +777,6 @@ time/snapping objects eg. death positions. There are circumstances when somebody
 is going to see/experience the "wrong" thing. Oh well.
 
 ** Subsystem Considerations
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Play nice with the physics engine
   - Moving things into each other is a bad idea, you're not going to have a good
     day
@@ -818,29 +785,29 @@ is going to see/experience the "wrong" thing. Oh well.
 - Animation tricks
   - A headless server need not pose characters until necessary
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 It's bad news when things interpenetrate; large forces usually result.
 
-Headless server can slide characters around and defer posing them until pose
-information is necessary to resolve collisions, eg headshots.
+On a headless server, animation can be optimized. It is possible for the server
+to slide the characters around and do only broadphase collision on their
+bounding boxes. At the point where a bullet collision occurs with a character,
+only then does the server need to compute the character pose to do the
+narrowphase collision (to determine whether it was a head shot).
 
 ** More on Update Logic
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Variable update frequency
   - Proximity
   - Velocity
   - Role (eg. target/team)
   - Visibility (PVS)
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 There are a lot of ways you can structure the update frequency and priority of
 your various game entities.
@@ -851,26 +818,24 @@ close objects.
 Another basic thing to do is to update faster objects more frequently, to
 hopefully achieve higher fidelity and fewer warping artifacts.
 
-It fails when you have scenarios like sniping where you're looking at something
-far away, or when keeping track of team-mates, so you can mix in role-based
-update logic.
+Proximity-based logic fails when you have scenarios like sniping where you're
+looking at something far away, or when keeping track of team-mates, so you can
+mix in role-based update logic.
 
 Another thing to consider is visibility-based updates in general and the
 maintenance of PVS/occlusion information on the server. Again, if your game has
-ways to see remote locations this is something to keep in mind.
+ways to see remote locations this is something to keep in mind. And the fact
+that this imposes more work on the server.
 
 * RTS issues
 ** Parallel Simulation
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Some games (eg RTS) have too many objects to sync
 - Input passing
 - Parallel simulation
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 In an RTS, you have hundreds of units with complex state and AI. This is just
@@ -879,16 +844,13 @@ is to send player inputs and make sure that machines can simulate the game
 deterministically in parallel.
 
 ** Parallel Simulation Problems
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Random events
 - Camera-dependent events
 - Floating point machine differences
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
 It is a very difficult and painstaking process to ensure that a simulation can
@@ -915,29 +877,27 @@ There is no real way to fix all the errors that cause network state divergence,
 other than by combing the code and logs.
 
 ** E-sports and Fairness
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 - Lockstep model is old but still important
 - Fairness trumps latency hiding
 - High level RTS gameplay is twitch gameplay
 
-*** Notes                                                          :B_note:
+*** Notes                                                        :B_noteNH:
 :PROPERTIES:
-:BEAMER_env: note
+:BEAMER_env: noteNH
 :END:
 
-It is an odd thought, but a true one, that FPS and RTS gameplay types swap over
-between low and high levels. ie. Low level FPS gameplay is twitch gameplay, and
-low level RTS gameplay is slow-paced strategic gameplay. But when you get to
-high level play, FPS is strategic - primarily based around knowing where your
+It is an interesting thought that FPS and RTS gameplay types swap over between
+low and high levels. ie. Low level FPS gameplay is twitch gameplay, and low
+level RTS gameplay is slow-paced strategic gameplay. But when you get to high
+level play, FPS is strategic - primarily based around knowing where your
 opponent is through audio cues and circuit timings - and RTS is twitch play:
 split-second microing of units and responding to resource challenges.
 
 E-sports require fairness over and above latency hiding. It is not acceptable
 for the clients to miss a gameturn (input opportunity). So the old lockstep
-model still exists in e-sports titles: the server waits gathers all clients'
-inputs before processing and sending out the game turn.
+model still exists in e-sports titles: the server waits to gather all clients'
+inputs before processing and sending out the game turn. And the clients send
+null packets for game turns where there is no player input.
 
 ** Bug Story
 \begin{center}
@@ -1026,23 +986,23 @@ changes to
 \texttt{\textcolor{defaultmintedgreen}{while}}
 \end{center}
 
-*** Notes                                                          :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
 
-This bug was amazing. It was quite subtle and hard to spot because it took a
-while to show up in games. Games had to last a while before the bug gradually
-took hold. But the effect was that slowly, clients would get further and further
-behind the server.
+#+begin_latex
+\end{frame}
+\note{
+(Can anyone point out the bug?)
+
+This bug was quite subtle and hard to spot because it took a while to show up in
+games. Games had to last a while before the bug gradually took hold. But the
+effect was that slowly, clients would get further and further behind the server.
 
 If a client had a spike such that a frame took a little longer to process or
 render, an extra gameturn could arrive from the server in that time. Now the
 client had two gameturns in its network queue. But it only ever processed one
 per render. So it would never catch up, and every time it took that little bit
-longer to process a frame, it would get that little bit more behind.
-
-One side effect of this was that I knew that the network code was pretty robust.
+longer to process a frame, it would get that little bit more behind.}
+\newpage
+\note{
 In one case we saw a client get behind by a full minute! The other player had
 already finished the game, and the player behind was still playing! I knew then
 that the code was robust!
@@ -1050,21 +1010,17 @@ that the code was robust!
 Coincidentally I had this bug twice in my career: 8 years after Populous: The
 Beginning, I was working on Goldeneye: RA and I had a variant of this same bug.
 In that case it was easier to recognize because the more clients that joined a
-game, the more the clients would get behind.
+game, the more the clients would get behind.}
+#+end_latex
 
 ** Bug Story II
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 \begin{center}
 Goldeneye: Rogue Agent
 \end{center}
 
-*** Notes                                                          :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
-
+#+begin_latex
+\end{frame}
+\note{
 Goldeneye was a round-based FPS with up to 8 players. It was peer-hosted and ran
 on XBox and PS2.
 
@@ -1079,8 +1035,9 @@ up 8-player games cycling to test.
 
 I read the code forwards, backwards, and in my sleep. Finally I tracked it down
 to the point where I knew what the problem was; I put in some code to fix it,
-pushed out a new build, made my tests, and it was fixed.
-
+pushed out a new build, made my tests, and it was fixed.}
+\newpage
+\note{
 That was Thursday. Everything was quiet over the weekend. On Tuesday testers
 reopened the bug. It was still happening.
 
@@ -1093,8 +1050,9 @@ the right version. Nothing seemed to be amiss. Finally, I went back to the code,
 set a breakpoint in the function I'd fixed, and went to the disassembly view.
 
 My fix was in the source. My fix didn't show up in the disassembly. I called
-over a couple of other programmers to check that what I was seeing was real.
-
+over a couple of other programmers to check that what I was seeing was real.}
+\newpage
+\note{
 Somehow the compiler was just ignoring my code. One of the other engineers
 checked the file in source control and found that the line endings were messed
 up. My single-line fix was preceded by a single-line comment - the compiler was
@@ -1105,21 +1063,17 @@ We fixed the line endings and the bug was finally dead.
 Goldeneye gave us lots of bugs to fix. New gameplay features were going in
 quickly and I was constantly having to make them work over the network. Such was
 (is?) the life of a network programmer - many projects got networking bolted on
-near the end.
+near the end.}
+#+end_latex
 
 ** Bug Story III
-:PROPERTIES:
-:BEAMER_act: [<+->]
-:END:
 \begin{center}
 Firewarrior NAT negotiation
 \end{center}
 
-*** Notes                                                          :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
-
+#+begin_latex
+\end{frame}
+\note{
 Firewarrior used a peer-to-peer network model, and we had to establish the
 mesh of connections, so NAT negotiation was pretty important.
 
@@ -1131,8 +1085,9 @@ This was a bug I just solved by thinking. There was nothing to be done in terms
 of gathering data. Eventually I realised that I was misunderstanding how NAT
 negotiation had to work - I was trying to get machines A and B to connect to
 each other simultaneously. What I had to do was to impose an ordering such that
-one machine was the initiator and one was the respondent.
-
+one machine was the initiator and one was the respondent.}
+\newpage
+\note{
 Once I did that, the bug was solved as if by magic, and the programmer who saw
 me fix the bug just by thinking was suitably awestruck!
 
@@ -1140,18 +1095,26 @@ This was a project where we had lots of issues with broadband routers.
 Compatibility testing was tough. Router firmware was sometimes buggy.
 
 (You still can't assume that a player behind a NAT will keep the same connection
-tuple during a "connected" UDP session...)
+tuple during a "connected" UDP session...)}
+#+end_latex
 
-* Further Notes                                                      :B_note:
-:PROPERTIES:
-:BEAMER_env: note
-:END:
+** Thanks
+\begin{center}
+The Real World: like Academia, except with smoke \& mirrors \& cutting corners \& messy stuff.
+\linebreak[4]\linebreak[4]
+Thanks for listening
+\linebreak[4]\linebreak[4]
+\texttt{bdeane@blizzard.com}
+\linebreak[4]\linebreak[4]
+Slides \& notes available at
+\linebreak[4]\linebreak[4]
+\texttt{http://github.com/elbeno/networking-in-the-real-world}
+\end{center}
 
+* Unused Notes                                                     :noexport:
 - MMO issues
 
-
 - Cheating
-
 
 - Networking at scale
 scaling servers
@@ -1167,7 +1130,6 @@ proxies
 - Weird clients
 file permissions
 OS edge cases (sleep mode)
-floating point mismatches
 client's aren't easy to ID
 
 - Dependencies
